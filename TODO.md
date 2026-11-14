@@ -24,6 +24,16 @@ Order matters: each stage works on its own and is tested in a throwaway Arch con
 - [ ] Anything that must not overwrite a user's file goes through `backup=()` or is applied by the doctor only when absent.
 - [ ] Decide what `sunshine-base` conflicts with (display manager choice, shells).
 
+## 2b. Payload (Hyprland / end-4 dots and their packages)
+- [ ] Today the ISO build makes the payload with `tools/import-end4.sh` (dots, offline package repo) and `tools/build-venv.sh`
+      (Python venv). Turn it into packages in this repo (`sunshine-hyprland`, `sunshine-hyprland-venv`) so an Arch machine
+      gets it with `pacman -S`, no ISO needed.
+- [ ] The payload must be deployable per user on an existing system: dots go to `/usr/share/sunshine/hyprland`, a user's
+      `~/.config` is only changed by `sunshine-hyprland-install` and only for files the user has not modified (backup first).
+- [ ] Pin the payload's AUR-only dependencies (quickshell, microtex, bibata, icon font, ...) as built packages in the repo,
+      so conversion never depends on the AUR being reachable or on a dependency that was removed there.
+- [ ] Payload version recorded in `/usr/share/sunshine/payload-version`; the doctor compares it with the repo's.
+
 ## 3. Converging doctor (`sunshine-doctor --fix`)
 - [ ] Rewrite as a list of **checks with fixes** (data, not a long script): `check_x` returns ok/bad, `fix_x` is idempotent.
 - [ ] Exit codes: 0 everything true, 1 something was fixed (run again), 2 something cannot be fixed automatically.
@@ -37,10 +47,23 @@ Order matters: each stage works on its own and is tested in a throwaway Arch con
       `curl -fsSL .../bootstrap.sh | sudo sh` (adds the repo, installs `sunshine-base`, runs the doctor). Needs only pacman + curl.
 - [ ] Update `sunshine-update` (system update tool) to run the doctor and pull missing assets after `pacman -Syu`.
 
+## 3b. System upgrade on the repos
+- [ ] `sunshine-update` = one command: (1) doctor pass 1 (pacman healthy), (2) `pacman -Syu` including `[sunshine]`
+      (so `sunshine-base`, the payload and the store update together with Arch), (3) other sources through UNI: AUR, Flatpak,
+      AppImage, Nix profile, (4) pull missing assets from the assets repo, (5) post-upgrade hooks: identity restore, initramfs/GRUB
+      (+ NixOS entry), snapshot before and after.
+- [ ] Partial-upgrade protection: refuse `pacman -Sy <pkg>` style installs from the store/UNI; always `-Syu`.
+- [ ] Order guarantee: `[sunshine]` packages are built against the current Arch repos; the release job rebuilds them when
+      Arch bumps a library they link to (soname bumps), and the doctor reports "repo behind Arch" instead of upgrading into a
+      broken state.
+- [ ] Rollback: snapper snapshot pre-upgrade, `sunshine-update --rollback`.
+- [ ] Declarative layer: `/etc/sunshine/system.toml` (services, Nix-managed packages); the update applies it after the upgrade.
+
 ## 4. Test matrix
 - [ ] Container: stock Arch -> loop `--fix` -> becomes Sunshine (identity, packages, services present).
 - [ ] Container: broken Arch (stale lock, empty keyring, no mirrorlist, half-upgraded) -> converges.
 - [ ] VM: real Arch install (UEFI and BIOS) -> `--convert` -> reboot -> Plasma/Hyprland session starts (use `test/smoke.sh`).
+- [ ] Upgrade: an old converged image + new repo state -> `sunshine-update` -> everything still boots and passes the smoke test.
 - [ ] Idempotence: running the doctor on a finished system changes nothing and exits 0.
 - [ ] Derivatives: Garuda/EndeavourOS/Manjaro detected and refused or handled explicitly (their repos conflict with ours).
 
