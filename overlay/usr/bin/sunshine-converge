@@ -1,0 +1,143 @@
+#!/usr/bin/env bash
+# Turns an Arch Linux system into Sunshine OS, one verified step at a time. Every step first checks whether it is already true and
+# only then fixes it, so running it again (or in a loop) is always safe and finishes when nothing is left to do.
+#   sunshine-converge                 pacman health, the [sunshine] repository, the Sunshine packages and the Hyprland payload
+#   sunshine-converge --convert       also: identity (os-release...), services, display manager, GRUB menu entry for NixOS
+#   sunshine-converge --loop          repeat until nothing changes any more (stops early when a pass makes no progress)
+#   sunshine-converge --dry-run       only say what would be done
+#   options: --no-hyprland  --repo-url URL  --force-derivative
+# Exit status: 0 everything is as it should be, 1 something was changed (run again, or use --loop), 2 something needs you.
+# It never removes packages or files of yours; files it replaces are kept as *.pre-sunshine.
+set -uo pipefail
+REPO_URL=${SUNSHINE_REPO_URL:-https://github.com/tak0dan/sunshineos-repo/releases/download/repo}
+ORIG=("$@")
+DRY=0; LOOP=0; CONVERT=0; HYPR=1; FORCE=0
+while [ $# -gt 0 ]; do case "$1" in
+  --dry-run) DRY=1;; --loop) LOOP=1;; --convert) CONVERT=1;; --no-hyprland) HYPR=0;; --force-derivative) FORCE=1;;
+  --repo-url) REPO_URL=${2:?}; shift;;
+  -h|--help) sed -n 2,11p "$0"; exit 0;;
+  *) echo "unknown option: $1" >&2; exit 2;; esac; shift; done
+[ "$(id -u)" -eq 0 ] || exec sudo -E "$0" "${ORIG[@]}"
+Y=$'\e[38;5;220m'; G=$'\e[32m'; R=$'\e[31m'; D=$'\e[2m'; N=$'\e[0m'
+STATE=/var/lib/sunshine; mkdir -p "$STATE" 2>/dev/null
+changed=0; problems=0
+ok()   { printf '  %s✔%s %s\n' "$G" "$N" "$*"; }
+did()  { changed=1; printf '  %s↺%s %s\n' "$Y" "$N" "$*"; }
+need() { problems=1; printf '  %s✘%s %s\n' "$R" "$N" "$*"; }
+act()  { [ "$DRY" = 1 ] && { printf '  %s…%s would: %s\n' "$D" "$N" "$*"; changed=1; return 1; }; return 0; }   # returns 1 in dry-run
+PAC="pacman --noconfirm --disable-download-timeout"
+log() { printf '\n%s☀ %s%s\n' "$Y" "$*" "$N"; }
+
+pass() {
+changed=0; problems=0
+
+log "Is this Arch?"
+. /etc/os-release 2>/dev/null
+case " ${ID:-} ${ID_LIKE:-} " in
+  *" sunshine "*|*" sunshineos "*) ok "already identifies as Sunshine OS";;
+  *" arch "*) if [ -f /etc/arch-release ] && [ "${ID:-}" = arch ]; then ok "Arch Linux";
+              elif [ "$FORCE" = 1 ]; then ok "Arch derivative (${ID:-?}), forced";
+              else need "this is ${PRETTY_NAME:-a derivative of Arch}: its own repositories can conflict with Sunshine's. Use --force-derivative to go on"; return; fi;;
+  *) need "not an Arch based system (ID=${ID:-?})"; return;;
+esac
+command -v pacman >/dev/null || { need "pacman is missing"; return; }
+
+log "1. Package manager"
+if [ -e /var/lib/pacman/db.lck ]; then
+  if pgrep -x pacman >/dev/null; then need "a package operation is running right now: wait for it"; return
+  else act "remove the stale lock" && { rm -f /var/lib/pacman/db.lck; did "stale db.lck removed"; }; fi
+else ok "no lock file"; fi
+if pacman-key --list-keys 2>/dev/null | grep -q 'Arch Linux'; then ok "keyring has the Arch keys"
+else act "initialise the keyring" && { pacman-key --init >/dev/null 2>&1; pacman-key --populate archlinux >/dev/null 2>&1; did "keyring initialised"; }; fi
+if grep -qE '^\s*Server\s*=' /etc/pacman.d/mirrorlist 2>/dev/null; then ok "mirrorlist has servers"
+else act "write a mirrorlist" && { cp -a /etc/pacman.d/mirrorlist /etc/pacman.d/mirrorlist.pre-sunshine 2>/dev/null
+  printf 'Server = https://geo.mirror.pkgbuild.com/$repo/os/$arch\nServer = https://mirror.rackspace.com/archlinux/$repo/os/$arch\n' > /etc/pacman.d/mirrorlist; did "mirrorlist written"; }; fi
+
+log "2. The [sunshine] repository"
+if grep -q '^\[sunshine\]' /etc/pacman.conf; then
+  cur=$(awk '/^\[sunshine\]/{f=1;next} /^\[/{f=0} f&&/^Server/{print $3;exit}' /etc/pacman.conf)
+  if [ "$cur" = "$REPO_URL" ]; then ok "[sunshine] points at $cur"
+  else act "point [sunshine] at $REPO_URL" && { cp -a /etc/pacman.conf /etc/pacman.conf.pre-sunshine; 
+    sed -i "/^\[sunshine\]/,/^\[/{s|^Server\s*=.*|Server = $REPO_URL|}" /etc/pacman.conf; did "[sunshine] repository updated"; }; fi
+else act "add the [sunshine] repository" && { cp -a /etc/pacman.conf /etc/pacman.conf.pre-sunshine
+  printf '\n[sunshine]\nSigLevel = Optional TrustAll\nServer = %s\n' "$REPO_URL" >> /etc/pacman.conf; did "[sunshine] repository added"; }; fi
+if [ "$DRY" = 0 ]; then
+  if ! $PAC -Sy >/tmp/sunshine-converge-sy.log 2>&1; then need "cannot reach the repositories: $(grep -m1 -i 'error' /tmp/sunshine-converge-sy.log | cut -c1-120)"; return; fi
+  pacman -Sl sunshine 2>/dev/null | grep -q sunshine-base || { need "the [sunshine] repository has no sunshine-base (is $REPO_URL right?)"; return; }
+  ok "repositories reachable"
+fi
+
+log "3. Up to date, and Sunshine's base"
+if [ "$DRY" = 0 ] && [ -n "$(pacman -Qu 2>/dev/null | head -1)" ]; then
+  # a package installed on top of a half-upgraded system is the classic way to break Arch: upgrade first
+  if $PAC -Su >/tmp/sunshine-converge-su.log 2>&1; then did "system upgraded"; else need "system upgrade failed: $(grep -m1 -i 'error' /tmp/sunshine-converge-su.log | cut -c1-120)"; return; fi
+else ok "system is up to date"; fi
+if pacman -Qq sunshine-base >/dev/null 2>&1; then ok "sunshine-base installed ($(pacman -Q sunshine-base | cut -d' ' -f2))"
+else act "install sunshine-base" && { if $PAC -S --needed sunshine-base >/tmp/sunshine-converge-b.log 2>&1; then did "sunshine-base installed"
+  else need "sunshine-base: $(grep -m1 -iE 'error|conflict' /tmp/sunshine-converge-b.log | cut -c1-140)"; return; fi; }; fi
+
+log "4. Sunshine packages"
+LISTS=/usr/share/sunshine/package-lists
+want=(); [ -f $LISTS/desktop.txt ] && want+=("$LISTS/desktop.txt"); [ "$HYPR" = 1 ] && [ -f $LISTS/hyprland.txt ] && want+=("$LISTS/hyprland.txt")
+skipped=$STATE/converge-skipped; touch "$skipped" 2>/dev/null
+if [ ${#want[@]} -gt 0 ]; then
+  mapfile -t missing < <(grep -hv '^\s*#' "${want[@]}" | awk 'NF{print $1}' | sort -u | while read -r p; do
+      pacman -Qq "$p" >/dev/null 2>&1 || pacman -Qqg "$p" >/dev/null 2>&1 || grep -qx "$p" "$skipped" 2>/dev/null || echo "$p"; done)
+  if [ ${#missing[@]} -eq 0 ]; then ok "all listed packages are installed${skipped:+ ($(grep -c . "$skipped" 2>/dev/null || echo 0) could not be)}"
+  elif act "install ${#missing[@]} packages: ${missing[*]:0:8}..."; then
+    # one by one: a package that cannot be installed (conflict, gone from the AUR...) is skipped, never forced
+    n=0; for p in "${missing[@]}"; do n=$((n+1)); done_=0
+      for try in 1 2 3; do
+        [ $try = 3 ] && $PAC -Sy >/dev/null 2>&1
+        if $PAC -S --needed "$p" >/tmp/sunshine-converge-p.log 2>&1; then done_=1; break; fi; sleep 2; done
+      if [ $done_ = 1 ]; then printf '    [%d/%d] %s\n' "$n" "${#missing[@]}" "$p"
+      else printf '    [%d/%d] %s skipped: %s\n' "$n" "${#missing[@]}" "$p" "$(grep -m1 -iE 'error|conflict|not found' /tmp/sunshine-converge-p.log | cut -c1-90)"; echo "$p" >> "$skipped"; fi
+    done; did "packages installed (skipped ones are listed in $skipped)"
+  fi
+fi
+if [ "$HYPR" = 1 ]; then
+  if ! pacman -Qq sunshine-payload >/dev/null 2>&1; then
+    act "install sunshine-payload" && { if $PAC -S --needed sunshine-payload >/tmp/sunshine-converge-pl.log 2>&1; then did "sunshine-payload installed"; else need "sunshine-payload: $(grep -m1 -i error /tmp/sunshine-converge-pl.log | cut -c1-120)"; fi; }
+  fi
+  if pacman -Qq sunshine-payload >/dev/null 2>&1; then
+    have=$(cat $STATE/payload-version 2>/dev/null); wantv=$(pacman -Q sunshine-payload | cut -d' ' -f2)
+    if [ "$have" = "$wantv" ]; then ok "Hyprland payload applied ($wantv)"
+    else act "apply the Hyprland payload ($wantv)" && { if /usr/bin/sunshine-payload-apply; then echo "$wantv" > $STATE/payload-version; did "Hyprland payload applied"; else need "applying the payload failed (see /var/log/sunshine/payload-apply.log)"; fi; }; fi
+  fi
+fi
+
+if [ "$CONVERT" = 1 ]; then
+  log "5. System identity, services, boot menu (--convert)"
+  if /usr/bin/sunshine-identity check --quiet 2>/dev/null; then ok "identity is Sunshine OS"
+  else act "apply the Sunshine identity" && { cp -an /usr/lib/os-release /usr/lib/os-release.pre-sunshine 2>/dev/null; /usr/bin/sunshine-identity apply --quiet && did "identity applied"; }; fi
+  if [ -d /run/systemd/system ]; then
+    for u in NetworkManager.service nix-daemon.socket; do
+      systemctl cat "$u" >/dev/null 2>&1 || continue
+      systemctl is-enabled --quiet "$u" 2>/dev/null && ok "$u enabled" || { act "enable $u" && { systemctl enable "$u" >/dev/null 2>&1 && did "$u enabled"; }; }
+    done
+    dm=$(readlink /etc/systemd/system/display-manager.service 2>/dev/null)
+    case "$dm" in *sddm*) ok "display manager is SDDM";;
+      "") act "enable SDDM" && { systemctl enable sddm.service >/dev/null 2>&1 && did "SDDM enabled"; };;
+      *) need "another display manager is enabled ($(basename "$dm")); switch with: sudo systemctl enable --force sddm.service";; esac
+    systemctl --global is-enabled sunshine-update-notifier.timer >/dev/null 2>&1 || { act "enable the update notifier" && { systemctl --global enable sunshine-update-notifier.timer >/dev/null 2>&1; did "update notifier enabled"; }; }
+  else ok "no systemd running (container?): services skipped"; fi
+  if [ -f /boot/grub/grub.cfg ] && command -v grub-mkconfig >/dev/null; then
+    if /etc/grub.d/42_nixos 2>/dev/null | grep -q menuentry && ! grep -q 'NixOS (auto-detected' /boot/grub/grub.cfg; then
+      act "add NixOS to the GRUB menu" && { /usr/bin/sunshine-nixos-grub && did "GRUB menu regenerated with NixOS"; }; else ok "GRUB menu needs nothing"; fi
+  fi
+fi
+}
+
+# ---- run
+prev=""
+for i in 1 2 3 4 5 6; do
+  pass
+  [ "$DRY" = 1 ] && break
+  if [ "$problems" = 1 ]; then echo; echo "${R}Needs your attention (see above).${N}"; exit 2; fi
+  if [ "$changed" = 0 ]; then echo; echo "${G}Done: nothing left to do. This is Sunshine OS$([ "$CONVERT" = 1 ] || echo " (run with --convert for identity, services and the boot menu)").${N}"; exit 0; fi
+  [ "$LOOP" = 1 ] || { echo; echo "Changes were made; run it again to check the result (or use --loop)."; exit 1; }
+  [ "$prev" = "$(pacman -Qq | md5sum)$(cat $STATE/converge-skipped 2>/dev/null | md5sum)" ] && { echo "no progress between two passes: stopping"; exit 2; }
+  prev="$(pacman -Qq | md5sum)$(cat $STATE/converge-skipped 2>/dev/null | md5sum)"
+done
+[ "$DRY" = 1 ] && { echo; echo "(dry run: nothing was changed)"; exit $((changed)); }
+echo "still changing after 6 passes: run it again"; exit 1

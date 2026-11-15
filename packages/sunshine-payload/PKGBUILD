@@ -1,0 +1,17 @@
+# Maintainer: tak0dan
+pkgname=sunshine-payload
+pkgver=0.1
+pkgrel=1
+pkgdesc="Sunshine OS Hyprland desktop payload: dotfiles, Python venv, session files (applied by sunshine-payload-apply)"
+arch=('any')
+url="https://github.com/tak0dan/SunshineOS"
+license=('GPL3')
+depends=('sunshine-base')
+options=('!strip' '!debug')
+source=(sunshine-payload-src.tar.zst)
+sha256sums=('SKIP')
+noextract=(sunshine-payload-src.tar.zst)
+
+package() {
+  tar --zstd -xf "$srcdir/sunshine-payload-src.tar.zst" -C "$pkgdir" --no-same-owner
+}
