@@ -9,7 +9,9 @@ PAY=/usr/share/sunshine/hyprland/root
 [ -d "$PAY" ] || { echo "payload not installed (pacman -S sunshine-payload)"; exit 1; }
 mkdir -p /var/log/sunshine; exec > >(tee -a /var/log/sunshine/payload-apply.log) 2>&1
 echo "== payload apply $(date)"
-rsync -aH --keep-dirlinks --backup --suffix=.pre-sunshine "$PAY/" / || echo "WARN: payload copy reported errors"
+# --no-perms/--no-owner/--no-group: directories that already exist (/var, /usr/share, ...) keep their own modes; new files get the
+# source mode minus umask
+rsync -rltH --no-perms --no-owner --no-group --keep-dirlinks --backup --suffix=.pre-sunshine "$PAY/" / || echo "WARN: payload copy reported errors"
 groupadd -f i2c; groupadd -f input
 command -v dconf >/dev/null && dconf update >/dev/null 2>&1
 [ -x /usr/bin/sunshine-fastfetch-patch ] && /usr/bin/sunshine-fastfetch-patch || true
@@ -17,7 +19,7 @@ command -v dconf >/dev/null && dconf update >/dev/null 2>&1
 while IFS=: read -r name _ uid gid _ home shell; do
   [ "$uid" -ge 1000 ] && [ "$uid" -lt 60000 ] && [ -d "$home" ] || continue
   case "$shell" in */nologin|*/false) continue;; esac
-  rsync -a --ignore-existing --chown="$uid:$gid" "$PAY/etc/skel/" "$home/" && echo "dotfiles added for $name"
+  rsync -rltH --no-perms --ignore-existing --chown="$uid:$gid" "$PAY/etc/skel/" "$home/" && echo "dotfiles added for $name"
   usermod -aG i2c,input "$name" 2>/dev/null
 done < /etc/passwd
 echo "== done"
