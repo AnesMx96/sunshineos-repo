@@ -1,5 +1,8 @@
 # TODO
 
+Status 2026-11-15: the conversion works end to end in a stock Arch container (`bootstrap.sh --loop --convert` -> exit 0, second run changes nothing). Done items are ticked; what is left: signing, `--dry-run` polish, VM test on a real Arch install, the converter living inside `sunshine-doctor`, the upgrade flow (3b), Garuda/Endeavour/Manjaro handling, docs.
+Known: the doctor still has its own checks; `sunshine-converge` is the converger and will be merged into it.
+
 Order matters: each stage works on its own and is tested in a throwaway Arch container / VM before the next.
 
 ## 0. Decisions still open
@@ -11,39 +14,39 @@ Order matters: each stage works on its own and is tested in a throwaway Arch con
 - [ ] **Kernel.** Keep the user's kernel (default) or replace it? Default: keep.
 
 ## 1. Repository
-- [ ] `scripts/build-repo.sh`: build every PKGBUILD in `packages/` in a clean container, `repo-add` into `sunshine.db`.
-- [ ] `scripts/publish.sh`: upload `*.pkg.tar.zst`, `sunshine.db`, `sunshine.files` to the `repo` release, replacing old versions
+- [x] `scripts/build-repo.sh`: build every PKGBUILD in `packages/` in a clean container, `repo-add` into `sunshine.db`.
+- [x] `scripts/publish.sh`: upload `*.pkg.tar.zst`, `sunshine.db`, `sunshine.files` to the `repo` release, replacing old versions
       (the db must always match the files that are there).
-- [ ] Test: a fresh `archlinux` container with only pacman can `pacman -Sy` and install a package from the repo.
-- [ ] Move the packages the ISO build already makes (`uni-pkg-git`, `sunshine-store`, `librepods`, ...) into this repo.
+- [x] Test: a fresh `archlinux` container with only pacman can `pacman -Sy` and install a package from the repo.
+- [x] Move the packages the ISO build already makes (`uni-pkg-git`, `sunshine-store`, `librepods`, ...) into this repo.
 
 ## 2. `sunshine-base` meta-package
-- [ ] `package-list/`: one list, read by the ISO build (`profile/packages.x86_64`) and by `sunshine-base` (`depends`).
-- [ ] Ship configs, hooks (`90-sunshine-nixos-grub.hook`, identity restore), scripts (`/usr/local/bin/sunshine-*` -> `/usr/bin`),
+- [x] `package-list/`: one list, read by the ISO build (`profile/packages.x86_64`) and by `sunshine-base` (`depends`).
+- [x] Ship configs, hooks (`90-sunshine-nixos-grub.hook`, identity restore), scripts (`/usr/local/bin/sunshine-*` -> `/usr/bin`),
       os-release/issue/branding, default skel, service presets.
 - [ ] Anything that must not overwrite a user's file goes through `backup=()` or is applied by the doctor only when absent.
 - [ ] Decide what `sunshine-base` conflicts with (display manager choice, shells).
 
 ## 2b. Payload (Hyprland / end-4 dots and their packages)
-- [ ] Today the ISO build makes the payload with `tools/import-end4.sh` (dots, offline package repo) and `tools/build-venv.sh`
+- [x] Today the ISO build makes the payload with `tools/import-end4.sh` (dots, offline package repo) and `tools/build-venv.sh`
       (Python venv). Turn it into packages in this repo (`sunshine-hyprland`, `sunshine-hyprland-venv`) so an Arch machine
       gets it with `pacman -S`, no ISO needed.
-- [ ] The payload must be deployable per user on an existing system: dots go to `/usr/share/sunshine/hyprland`, a user's
+- [x] The payload must be deployable per user on an existing system: dots go to `/usr/share/sunshine/hyprland`, a user's
       `~/.config` is only changed by `sunshine-hyprland-install` and only for files the user has not modified (backup first).
 - [ ] Pin the payload's AUR-only dependencies (quickshell, microtex, bibata, icon font, ...) as built packages in the repo,
       so conversion never depends on the AUR being reachable or on a dependency that was removed there.
 - [ ] Payload version recorded in `/usr/share/sunshine/payload-version`; the doctor compares it with the repo's.
 
 ## 3. Converging doctor (`sunshine-doctor --fix`)
-- [ ] Rewrite as a list of **checks with fixes** (data, not a long script): `check_x` returns ok/bad, `fix_x` is idempotent.
+- [x] Rewrite as a list of **checks with fixes** (data, not a long script): `check_x` returns ok/bad, `fix_x` is idempotent.
 - [ ] Exit codes: 0 everything true, 1 something was fixed (run again), 2 something cannot be fixed automatically.
-- [ ] Pass 1 (pacman works): stale `db.lck`, keyring (`pacman-key --init/--populate`), mirrorlist, partial upgrade (`pacman -Syu`),
+- [x] Pass 1 (pacman works): stale `db.lck`, keyring (`pacman-key --init/--populate`), mirrorlist, partial upgrade (`pacman -Syu`),
       broken db (`pacman -Dk`), missing `/var/lib/pacman/sync`.
-- [ ] Pass 2: write the `[sunshine]` section idempotently, import and sign the repo key.
-- [ ] Pass 3-5 as in the README table; `--convert` gate for bootloader/initramfs/os-release.
+- [x] Pass 2: write the `[sunshine]` section idempotently, import and sign the repo key.
+- [x] Pass 3-5 as in the README table; `--convert` gate for bootloader/initramfs/os-release.
 - [ ] `--dry-run` prints the plan; `--loop` repeats until exit 0 or no progress (guard against endless loops: stop when two
       passes in a row fix the same thing).
-- [ ] A standalone bootstrap one-liner for a machine that has no doctor yet:
+- [x] A standalone bootstrap one-liner for a machine that has no doctor yet:
       `curl -fsSL .../bootstrap.sh | sudo sh` (adds the repo, installs `sunshine-base`, runs the doctor). Needs only pacman + curl.
 - [ ] Update `sunshine-update` (system update tool) to run the doctor and pull missing assets after `pacman -Syu`.
 
@@ -60,11 +63,11 @@ Order matters: each stage works on its own and is tested in a throwaway Arch con
 - [ ] Declarative layer: `/etc/sunshine/system.toml` (services, Nix-managed packages); the update applies it after the upgrade.
 
 ## 4. Test matrix
-- [ ] Container: stock Arch -> loop `--fix` -> becomes Sunshine (identity, packages, services present).
+- [x] Container: stock Arch -> loop `--fix` -> becomes Sunshine (identity, packages, services present).
 - [ ] Container: broken Arch (stale lock, empty keyring, no mirrorlist, half-upgraded) -> converges.
 - [ ] VM: real Arch install (UEFI and BIOS) -> `--convert` -> reboot -> Plasma/Hyprland session starts (use `test/smoke.sh`).
 - [ ] Upgrade: an old converged image + new repo state -> `sunshine-update` -> everything still boots and passes the smoke test.
-- [ ] Idempotence: running the doctor on a finished system changes nothing and exits 0.
+- [x] Idempotence: running the doctor on a finished system changes nothing and exits 0.
 - [ ] Derivatives: Garuda/EndeavourOS/Manjaro detected and refused or handled explicitly (their repos conflict with ours).
 
 ## 5. Docs
