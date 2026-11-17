@@ -125,6 +125,7 @@ qt6-tools
 cmake
 ripgrep
 breeze
+darkly-bin
 gnome-keyring
 polkit-kde-agent
 systemsettings
