@@ -75,6 +75,8 @@ else ok "system is up to date"; fi
 if pacman -Qq sunshine-base >/dev/null 2>&1; then ok "sunshine-base installed ($(pacman -Q sunshine-base | cut -d' ' -f2))"
 else act "install sunshine-base" && { if $PAC -S --needed sunshine-base >/tmp/sunshine-converge-b.log 2>&1; then did "sunshine-base installed"
   else need "sunshine-base: $(grep -m1 -iE 'error|conflict' /tmp/sunshine-converge-b.log | cut -c1-140)"; return; fi; }; fi
+# the repository is signed and must be first: sunshine-base brings the key and the tool that sets this (and adds Chaotic-AUR)
+[ -x /usr/bin/sunshine-repo ] && /usr/bin/sunshine-repo ensure --quiet >/dev/null 2>&1
 
 log "4. Sunshine packages"
 LISTS=/usr/share/sunshine/package-lists
