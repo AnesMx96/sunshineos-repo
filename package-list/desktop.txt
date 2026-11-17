@@ -159,5 +159,4 @@ lsd
 librepods
 kdeconnect
 sshfs
-nix
 uni-pkg-git

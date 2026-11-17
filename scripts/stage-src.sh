@@ -15,7 +15,7 @@ T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
 # ---- sunshine-base
 B=$T/base; mkdir -p "$B/usr/bin" "$B/usr/share" "$B/usr/lib/systemd/user" "$B/etc/grub.d"
 for s in doctor identity info update update-notifier update-run toolbox welcome pet pods term prompt session session-notice set-shell \
-         snapshot snapshots-setup cleanup boot-repair fix-pacman fastfetch-patch hyprland-install plasma-setup nixos-grub crypt-setup repo apps webapp; do
+         snapshot snapshots-setup cleanup boot-repair fix-pacman fastfetch-patch hyprland-install plasma-setup nixos-grub crypt-setup repo apps webapp topbar update-check diagnose restore-visuals; do
   [ -f "$A/usr/local/bin/sunshine-$s" ] && install -m755 "$A/usr/local/bin/sunshine-$s" "$B/usr/bin/sunshine-$s" || echo "note: sunshine-$s not in the checkout"
 done
 cp -a "$A"/usr/bin/sunshine-store* "$B/usr/bin/"
@@ -23,6 +23,9 @@ cp -a "$A/usr/lib/sunshine-store" "$B/usr/lib/"
 cp -a "$A"/usr/lib/systemd/user/sunshine-store-indexer.* "$B/usr/lib/systemd/user/"
 mkdir -p "$B/usr/lib/systemd/system" "$B/etc/sunshine"; cp -a "$A"/usr/lib/systemd/system/sunshine-*.service "$A"/usr/lib/systemd/system/sunshine-*.timer "$B/usr/lib/systemd/system/" 2>/dev/null; cp -a "$A"/etc/sunshine/snapshots.conf "$B/etc/sunshine/"
 cp -a "$A"/etc/systemd/user/sunshine-update-notifier.* "$B/usr/lib/systemd/user/"
+cp -a "$A"/usr/lib/systemd/user/sunshine-diagnose.* "$B/usr/lib/systemd/user/" 2>/dev/null || true
+mkdir -p "$B/usr/lib/sunshine" "$B/usr/share/plasma/plasmoids"; cp -a "$A/usr/local/lib/sunshine/ui.sh" "$B/usr/lib/sunshine/"; cp -a "$A"/usr/share/plasma/plasmoids/com.sunshineos.* "$B/usr/share/plasma/plasmoids/" 2>/dev/null || true
+cp -a "$A/etc/sunshine/tools.conf" "$B/etc/sunshine/" 2>/dev/null || true
 install -m755 "$A/etc/grub.d/42_nixos" "$B/etc/grub.d/42_nixos"
 for d in libalpm aurorae color-schemes icons pixmaps plasma sddm sunshine-store wallpapers; do cp -a "$A/usr/share/$d" "$B/usr/share/"; done
 mkdir -p "$B/usr/share/applications" "$B/usr/share/grub"
@@ -32,6 +35,7 @@ rsync -a --exclude=/hyprland "$A/usr/share/sunshine/" "$B/usr/share/sunshine/"  
 mkdir -p "$B/usr/share/sunshine/package-lists"; cp "$HERE"/package-list/*.txt "$B/usr/share/sunshine/package-lists/"
 install -m755 "$HERE"/overlay/usr/bin/sunshine-converge "$HERE"/overlay/usr/bin/sunshine-payload-apply "$B/usr/bin/"
 # the live-only pieces of the hook directory: none today; the rest refers to /usr/local/bin/sunshine-*
+grep -rlI '/usr/local/lib/sunshine/' "$B" 2>/dev/null | xargs -r sed -i 's#/usr/local/lib/sunshine/#/usr/lib/sunshine/#g'
 grep -rlI '/usr/local/bin/sunshine-' "$B" 2>/dev/null | xargs -r sed -i 's#/usr/local/bin/sunshine-#/usr/bin/sunshine-#g'
 normalise "$B"; pack "$B" "$HERE/packages/sunshine-base/sunshine-base-src.tar.zst"
 echo "sunshine-base source: $(du -h "$HERE/packages/sunshine-base/sunshine-base-src.tar.zst" | cut -f1)"

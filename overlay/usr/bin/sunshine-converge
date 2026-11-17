@@ -111,7 +111,7 @@ if [ "$CONVERT" = 1 ]; then
   if /usr/bin/sunshine-identity check --quiet 2>/dev/null; then ok "identity is Sunshine OS"
   else act "apply the Sunshine identity" && { cp -an /usr/lib/os-release /usr/lib/os-release.pre-sunshine 2>/dev/null; /usr/bin/sunshine-identity apply --quiet && did "identity applied"; }; fi
   if [ -d /run/systemd/system ]; then
-    for u in NetworkManager.service nix-daemon.socket; do
+    for u in NetworkManager.service; do
       systemctl cat "$u" >/dev/null 2>&1 || continue
       systemctl is-enabled --quiet "$u" 2>/dev/null && ok "$u enabled" || { act "enable $u" && { systemctl enable "$u" >/dev/null 2>&1 && did "$u enabled"; }; }
     done
