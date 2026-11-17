@@ -1,0 +1,8 @@
+{
+ "id": "claude",
+ "name": "Claude (CLI and desktop)",
+ "aur": [
+  "claude-code",
+  "claude-desktop"
+ ]
+}

@@ -1,0 +1,4 @@
+post_install() {
+  mkdir -p /var/lib/sunshine/pending
+  : > /var/lib/sunshine/pending/tor
+}

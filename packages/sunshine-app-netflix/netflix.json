@@ -1,0 +1,8 @@
+{
+ "id": "netflix",
+ "name": "Netflix",
+ "webapp": {
+  "url": "https://www.netflix.com/",
+  "name": "Netflix"
+ }
+}

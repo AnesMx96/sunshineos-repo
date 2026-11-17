@@ -1,0 +1,7 @@
+{
+ "id": "vscode",
+ "name": "Visual Studio Code",
+ "aur": [
+  "visual-studio-code-bin"
+ ]
+}

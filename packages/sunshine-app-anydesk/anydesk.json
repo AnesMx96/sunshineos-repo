@@ -1,0 +1,7 @@
+{
+ "id": "anydesk",
+ "name": "AnyDesk",
+ "aur": [
+  "anydesk-bin"
+ ]
+}

@@ -1,0 +1,5 @@
+{
+ "id": "mysql-workbench",
+ "name": "MySQL Workbench with MariaDB",
+ "setup": "mariadb-user"
+}

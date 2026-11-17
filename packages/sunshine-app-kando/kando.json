@@ -1,0 +1,8 @@
+{
+ "id": "kando",
+ "name": "Kando",
+ "aur": [
+  "kando-bin"
+ ],
+ "setup": "kando-theme"
+}

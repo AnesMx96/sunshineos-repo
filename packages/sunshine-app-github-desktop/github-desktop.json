@@ -1,0 +1,7 @@
+{
+ "id": "github-desktop",
+ "name": "GitHub Desktop",
+ "aur": [
+  "github-desktop-bin"
+ ]
+}

@@ -1,0 +1,5 @@
+{
+ "id": "qemu",
+ "name": "QEMU and virt-manager",
+ "setup": "libvirt-group"
+}

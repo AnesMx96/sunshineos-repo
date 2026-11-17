@@ -1,0 +1,7 @@
+{
+ "id": "chrome",
+ "name": "Google Chrome",
+ "aur": [
+  "google-chrome"
+ ]
+}

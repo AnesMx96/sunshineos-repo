@@ -1,0 +1,7 @@
+{
+ "id": "protonge",
+ "name": "Proton-GE",
+ "aur": [
+  "proton-ge-custom-bin"
+ ]
+}

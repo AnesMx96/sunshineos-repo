@@ -1,0 +1,7 @@
+{
+ "id": "vscodium",
+ "name": "VSCodium",
+ "aur": [
+  "vscodium-bin"
+ ]
+}

@@ -1,0 +1,8 @@
+{
+ "id": "notion",
+ "name": "Notion",
+ "webapp": {
+  "url": "https://www.notion.so/",
+  "name": "Notion"
+ }
+}

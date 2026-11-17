@@ -1,0 +1,8 @@
+{
+ "id": "pamac",
+ "name": "Pamac",
+ "aur": [
+  "pamac-aur"
+ ],
+ "setup": "pamac-theme"
+}

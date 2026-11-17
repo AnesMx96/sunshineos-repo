@@ -1,0 +1,5 @@
+{
+ "id": "virtualbox",
+ "name": "VirtualBox",
+ "setup": "vbox-group"
+}

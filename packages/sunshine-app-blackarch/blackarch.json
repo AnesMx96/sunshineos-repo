@@ -1,0 +1,5 @@
+{
+ "id": "blackarch",
+ "name": "BlackArch repository",
+ "setup": "blackarch"
+}

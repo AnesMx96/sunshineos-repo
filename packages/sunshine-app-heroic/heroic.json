@@ -1,0 +1,7 @@
+{
+ "id": "heroic",
+ "name": "Heroic (GOG and Epic launcher)",
+ "aur": [
+  "heroic-games-launcher-bin"
+ ]
+}

@@ -1,0 +1,8 @@
+{
+ "id": "whatsapp",
+ "name": "WhatsApp",
+ "webapp": {
+  "url": "https://web.whatsapp.com/",
+  "name": "WhatsApp"
+ }
+}

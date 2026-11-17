@@ -1,0 +1,8 @@
+{
+ "id": "outlook",
+ "name": "Outlook",
+ "webapp": {
+  "url": "https://outlook.live.com/mail/",
+  "name": "Outlook"
+ }
+}

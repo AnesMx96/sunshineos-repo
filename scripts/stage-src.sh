@@ -15,7 +15,7 @@ T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
 # ---- sunshine-base
 B=$T/base; mkdir -p "$B/usr/bin" "$B/usr/share" "$B/usr/lib/systemd/user" "$B/etc/grub.d"
 for s in doctor identity info update update-notifier update-run toolbox welcome pet pods term prompt session session-notice set-shell \
-         snapshot snapshots-setup cleanup boot-repair fix-pacman fastfetch-patch hyprland-install plasma-setup nixos-grub crypt-setup repo; do
+         snapshot snapshots-setup cleanup boot-repair fix-pacman fastfetch-patch hyprland-install plasma-setup nixos-grub crypt-setup repo apps webapp; do
   [ -f "$A/usr/local/bin/sunshine-$s" ] && install -m755 "$A/usr/local/bin/sunshine-$s" "$B/usr/bin/sunshine-$s" || echo "note: sunshine-$s not in the checkout"
 done
 cp -a "$A"/usr/bin/sunshine-store* "$B/usr/bin/"
@@ -28,7 +28,7 @@ for d in libalpm aurorae color-schemes icons pixmaps plasma sddm sunshine-store 
 mkdir -p "$B/usr/share/applications" "$B/usr/share/grub"
 cp -a "$A"/usr/share/applications/sunshine-*.desktop "$B/usr/share/applications/"; rm -f "$B/usr/share/applications/sunshine-install.desktop"
 cp -a "$A/usr/share/grub/themes" "$B/usr/share/grub/"
-rsync -a --exclude=/hyprland "$A/usr/share/sunshine/" "$B/usr/share/sunshine/"
+rsync -a --exclude=/hyprland "$A/usr/share/sunshine/" "$B/usr/share/sunshine/"   # includes apps-setup/, catalogue.toml
 mkdir -p "$B/usr/share/sunshine/package-lists"; cp "$HERE"/package-list/*.txt "$B/usr/share/sunshine/package-lists/"
 install -m755 "$HERE"/overlay/usr/bin/sunshine-converge "$HERE"/overlay/usr/bin/sunshine-payload-apply "$B/usr/bin/"
 # the live-only pieces of the hook directory: none today; the rest refers to /usr/local/bin/sunshine-*

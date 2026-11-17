@@ -1,0 +1,7 @@
+{
+ "id": "brave",
+ "name": "Brave",
+ "aur": [
+  "brave-bin"
+ ]
+}

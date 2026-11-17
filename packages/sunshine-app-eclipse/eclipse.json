@@ -1,0 +1,7 @@
+{
+ "id": "eclipse",
+ "name": "Eclipse (Java)",
+ "aur": [
+  "eclipse-java-bin"
+ ]
+}
