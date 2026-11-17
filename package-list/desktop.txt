@@ -169,3 +169,4 @@ python-lsp-server
 rust-analyzer
 lua-language-server
 nano-syntax-highlighting
+rate-mirrors

@@ -25,7 +25,7 @@ mkdir -p "$B/usr/lib/systemd/system" "$B/etc/sunshine"; cp -a "$A"/usr/lib/syste
 cp -a "$A"/etc/systemd/user/sunshine-update-notifier.* "$B/usr/lib/systemd/user/"
 cp -a "$A"/usr/lib/systemd/user/sunshine-diagnose.* "$B/usr/lib/systemd/user/" 2>/dev/null || true
 mkdir -p "$B/usr/lib/sunshine" "$B/usr/share/plasma/plasmoids"; cp -a "$A/usr/local/lib/sunshine/ui.sh" "$B/usr/lib/sunshine/"; cp -a "$A"/usr/share/plasma/plasmoids/com.sunshineos.* "$B/usr/share/plasma/plasmoids/" 2>/dev/null || true
-cp -a "$A/etc/sunshine/tools.conf" "$B/etc/sunshine/" 2>/dev/null || true
+cp -a "$A/etc/sunshine/tools.conf" "$A/etc/sunshine/repos.conf" "$B/etc/sunshine/" 2>/dev/null || true
 mkdir -p "$B/usr/share/pacman/keyrings"; cp -a "$A"/usr/share/pacman/keyrings/sunshine.* "$B/usr/share/pacman/keyrings/"
 install -m755 "$A/etc/grub.d/42_nixos" "$B/etc/grub.d/42_nixos"
 for d in libalpm aurorae color-schemes icons pixmaps plasma sddm sunshine-store wallpapers; do cp -a "$A/usr/share/$d" "$B/usr/share/"; done
