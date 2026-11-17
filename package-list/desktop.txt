@@ -114,6 +114,9 @@ fish
 starship
 eza
 bat
+nnn
+ranger
+tree
 fzf
 zoxide
 zsh-autosuggestions
