@@ -8,6 +8,7 @@ url="https://github.com/tak0dan/SunshineOS"
 license=('MIT')
 depends=('bash' 'sudo' 'rsync' 'git' 'python' 'uni-pkg-git' 'snapper' 'nix')
 optdepends=('sunshine-payload: the Hyprland desktop (dots, Python venv)')
+backup=('etc/sunshine/snapshots.conf')
 source=(sunshine-base-src.tar.zst)
 sha256sums=('SKIP')
 noextract=(sunshine-base-src.tar.zst)

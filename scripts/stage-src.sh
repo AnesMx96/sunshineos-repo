@@ -21,6 +21,7 @@ done
 cp -a "$A"/usr/bin/sunshine-store* "$B/usr/bin/"
 cp -a "$A/usr/lib/sunshine-store" "$B/usr/lib/"
 cp -a "$A"/usr/lib/systemd/user/sunshine-store-indexer.* "$B/usr/lib/systemd/user/"
+mkdir -p "$B/usr/lib/systemd/system" "$B/etc/sunshine"; cp -a "$A"/usr/lib/systemd/system/sunshine-*.service "$A"/usr/lib/systemd/system/sunshine-*.timer "$B/usr/lib/systemd/system/" 2>/dev/null; cp -a "$A"/etc/sunshine/snapshots.conf "$B/etc/sunshine/"
 cp -a "$A"/etc/systemd/user/sunshine-update-notifier.* "$B/usr/lib/systemd/user/"
 install -m755 "$A/etc/grub.d/42_nixos" "$B/etc/grub.d/42_nixos"
 for d in libalpm aurorae color-schemes icons pixmaps plasma sddm sunshine-store wallpapers; do cp -a "$A/usr/share/$d" "$B/usr/share/"; done

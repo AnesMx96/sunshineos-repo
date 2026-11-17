@@ -152,6 +152,7 @@ snapper
 snap-pac
 grub-btrfs
 btrfs-assistant
+timeshift
 inotify-tools
 paru-bin
 lsd
