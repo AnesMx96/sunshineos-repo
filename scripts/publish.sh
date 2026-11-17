@@ -6,7 +6,9 @@ cd "$(dirname "$0")/.."
 REPO=${GH_REPO:-tak0dan/sunshineos-repo}; TAG=repo
 [ -f out/repo/sunshine.db.tar.gz ] || { echo "run scripts/build-repo.sh first"; exit 1; }
 T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
-cp out/repo/*.pkg.tar.zst "$T/"
+cp out/repo/*.pkg.tar.zst out/repo/*.pkg.tar.zst.sig "$T/"
+cp out/repo/sunshine.db.tar.gz.sig "$T/sunshine.db.tar.gz.sig"; cp out/repo/sunshine.db.tar.gz.sig "$T/sunshine.db.sig"; cp out/repo/sunshine.files.tar.gz.sig "$T/sunshine.files.tar.gz.sig" 2>/dev/null; cp out/repo/sunshine.files.tar.gz.sig "$T/sunshine.files.sig" 2>/dev/null
+cp "$HOME/sunshineos-build/signing/sunshine.gpg" "$T/sunshine.gpg"; cp "$HOME/sunshineos-build/signing/sunshine-trusted" "$T/sunshine-trusted"
 # GitHub release assets cannot be symlinks: pacman asks for sunshine.db / sunshine.files, so they are real copies
 cp out/repo/sunshine.db.tar.gz "$T/sunshine.db"; cp out/repo/sunshine.db.tar.gz "$T/sunshine.db.tar.gz"
 cp out/repo/sunshine.files.tar.gz "$T/sunshine.files"; cp out/repo/sunshine.files.tar.gz "$T/sunshine.files.tar.gz"

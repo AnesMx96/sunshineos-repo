@@ -1,6 +1,6 @@
 # Maintainer: tak0dan
 pkgname=sunshine-base
-pkgver=0.1
+pkgver=0.2
 pkgrel=1
 pkgdesc="Sunshine OS tools, hooks, identity, store and package lists for an Arch based system"
 arch=('any')

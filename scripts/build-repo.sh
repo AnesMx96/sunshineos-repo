@@ -26,4 +26,5 @@ docker run --rm -e HOST_UID="$(id -u)" -e HOST_GID="$(id -g)" -v "$PWD/packages:
   bash /scripts/fix-pkg-modes-inside.sh /out
   cd /out && rm -f sunshine.db* sunshine.files* && repo-add -q sunshine.db.tar.gz ./*.pkg.tar.zst
   chown -R "$HOST_UID:$HOST_GID" /out'
+scripts/sign-repo.sh
 ls -la "$OUT" | awk '{print $5, $9}' | tail -n +4
