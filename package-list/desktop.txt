@@ -67,7 +67,6 @@ ffmpeg
 vlc
 fwupd
 ufw
-man-db
 bash-completion
 yay
 qt6-imageformats
@@ -170,3 +169,5 @@ rust-analyzer
 lua-language-server
 nano-syntax-highlighting
 rate-mirrors
+os-prober
+ntfs-3g
