@@ -15,8 +15,7 @@ T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
 # ---- sunshine-base
 B=$T/base; mkdir -p "$B/usr/bin" "$B/usr/share" "$B/usr/lib/systemd/user" "$B/etc/grub.d"
 for s in doctor identity info update update-notifier update-run toolbox welcome pet pods term prompt session session-notice set-shell \
-         snapshot snapshots-setup cleanup boot-repair fix-pacman fastfetch-patch hyprland-install plasma-setup nixos-grub crypt-setup repo apps webapp topbar update-check
-         rescue kernel performance gaming drivers desktops toolsync migrate pacnew reset-plasma fix support backup state-hook health-scan game-run secureboot diagnose restore-visuals; do
+         snapshot snapshots-setup cleanup boot-repair fix-pacman fastfetch-patch hyprland-install plasma-setup nixos-grub crypt-setup repo apps webapp topbar update-check rescue kernel performance gaming drivers desktops toolsync migrate pacnew reset-plasma fix support backup state-hook health-scan game-run secureboot diagnose restore-visuals; do
   [ -f "$A/usr/local/bin/sunshine-$s" ] && install -m755 "$A/usr/local/bin/sunshine-$s" "$B/usr/bin/sunshine-$s" || echo "note: sunshine-$s not in the checkout"
 done
 cp -a "$A"/usr/bin/sunshine-store* "$B/usr/bin/"
