@@ -183,3 +183,12 @@ lm_sensors
 thermald
 restic
 libsecret
+sane
+sane-airscan
+skanpage
+cups-pdf
+ghostscript
+gutenprint
+ipp-usb
+hplip
+flatpak-kcm
