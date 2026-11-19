@@ -171,3 +171,15 @@ nano-syntax-highlighting
 rate-mirrors
 os-prober
 ntfs-3g
+earlyoom
+avahi
+nss-mdns
+pciutils
+lsof
+strace
+btop
+ncdu
+lm_sensors
+thermald
+restic
+libsecret
