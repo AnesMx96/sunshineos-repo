@@ -32,7 +32,7 @@ for d in libalpm aurorae color-schemes icons pixmaps plasma sddm sunshine-store 
 mkdir -p "$B/usr/share/applications" "$B/usr/share/grub"
 cp -a "$A"/usr/share/applications/sunshine-*.desktop "$B/usr/share/applications/"; rm -f "$B/usr/share/applications/sunshine-install.desktop"
 cp -a "$A/usr/share/grub/themes" "$B/usr/share/grub/"
-rsync -a --exclude=/hyprland "$A/usr/share/sunshine/" "$B/usr/share/sunshine/"   # includes apps-setup/, catalogue.toml
+rsync -a --exclude=/hyprland --exclude=/pkgs "$A/usr/share/sunshine/" "$B/usr/share/sunshine/"   # includes apps-setup/, catalogue.toml
 mkdir -p "$B/usr/share/sunshine/package-lists"; cp "$HERE"/package-list/*.txt "$B/usr/share/sunshine/package-lists/"
 install -m755 "$HERE"/overlay/usr/bin/sunshine-converge "$HERE"/overlay/usr/bin/sunshine-payload-apply "$B/usr/bin/"
 # the live-only pieces of the hook directory: none today; the rest refers to /usr/local/bin/sunshine-*
